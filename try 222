@@ -1,0 +1,196 @@
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+#include <windows.h>
+#include <conio.h>
+//#include <graphics.h>
+#include<ctime>
+#include <iomanip>
+#pragma warning(disable:4996)
+ 
+
+using namespace std;
+
+
+struct record
+{
+	char employee[30];
+	short int department;
+	char post[22];
+	char birthdate[10];
+	
+
+	bool operator >(record other) {
+		if (department == other.department) {
+			for (int i = 0; i < 30; i++) {
+				if (this->employee[i] == other.employee[i])
+					continue;
+				return this->employee[i] > other.employee[i];
+			}
+		}
+		return department > other.department;
+		
+	}
+};
+void heapify(record* arr, int n, int i)
+{
+	int largest = i;
+	// Инициализируем наибольший элемент как корень
+	int l = 2 * i + 1; // левый = 2*i + 1
+	int r = 2 * i + 2; // правый = 2*i + 2
+
+	// Если левый дочерний элемент больше корня
+	if (l < n && arr[l] > arr[largest])
+		largest = l;
+
+	// Если правый дочерний элемент больше, чем самый большой элемент на данный момент
+	if (r < n && arr[r] > arr[largest])
+		largest = r;
+
+	// Если самый большой элемент не корень
+	if (largest != i)
+	{
+		swap(arr[i], arr[largest]);
+
+		// Рекурсивно преобразуем в двоичную кучу затронутое поддерево
+		heapify(arr, n, largest);
+	}
+}
+
+// Основная функция, выполняющая пирамидальную сортировку
+void heapSort(record* arr, int n)
+{
+	// Построение кучи (перегруппируем массив)
+	for (int i = n / 2 - 1; i >= 0; i--)
+		heapify(arr, n, i);
+
+	// Один за другим извлекаем элементы из кучи
+	for (int i = n - 1; i >= 0; i--)
+	{
+		// Перемещаем текущий корень в конец
+		swap(arr[0], arr[i]);
+
+		// вызываем процедуру heapify на уменьшенной куче
+		heapify(arr, i, 0);
+	}
+}
+
+void output(record* mas, int size)
+{
+	for (int i = 0, j = 0; i <= size; ++i, ++j) {
+		if (j == 20) {
+			SetConsoleOutputCP(1251);
+			cout << "Навигация: P - предыдущая страница, N - следующая страница, S - указать номер страницы, Q - выход\n";
+			SetConsoleOutputCP(866);
+			char c = getch();
+			c = toupper(c);
+			switch (c) {
+			case 'P':
+				i >= 40?i = i - 40:i = 0;
+				break;
+			case 'N':
+				if (i == size)
+					i = size - 20;
+				break;
+			case 'S':
+				SetConsoleOutputCP(1251);
+				cout << "Введите номер страницы: ";
+				SetConsoleOutputCP(866);
+				cin >> j;
+				i = 20 * j - 20;
+				break;
+			case 'Q':
+				system("cls");
+				return;
+
+
+			}
+			system("cls");
+			j = 0;
+		}
+		if (j == 0) {
+			SetConsoleOutputCP(1251);
+			cout << "Страница " << i/20+1 << '/' << size/20 << endl;
+			cout << setw(30) << left << "ФИО" << setw(13) << "\tНОМЕР ОТДЕЛА" << setw(22) << "\tДОЛЖНОСТЬ" << setw(10) << "\tДАТА РОЖДЕНИЯ\n";
+			SetConsoleOutputCP(866);
+		}
+
+		if (mas != nullptr)
+			cout << mas[i].employee << "\t" << setw(13) << mas[i].department << "\t" << mas[i].post << "\t" << mas[i].birthdate << "\t" << endl;
+	}
+}
+
+int main()
+{
+	SetConsoleOutputCP(866);
+	FILE* fp;
+	fp = fopen("testBase2.dat", "rb");
+	record* unmas = new record[4000];
+	record* sortedmas = new record[4000];
+	int i = 0, sum = 0;
+	short int input;
+	record* mas = nullptr;
+	i = fread((record*)unmas, sizeof(record), 4000, fp);
+	for (int i = 0; i < 4000; i++)
+		sortedmas[i] = unmas[i];
+	heapSort(sortedmas,4000);
+	char c = 0;
+	do {
+		int size;
+		system("cls");
+		SetConsoleOutputCP(1251);
+		cout << "Меню:" << endl;
+		cout << "1. Показать исходную базу данных" << endl;
+		cout << "2. Показать отсортированную базу данных" << endl;
+		cout << "3. Поиск записи по номеру отдела" << endl;
+		cout << "4. Выход" << endl;
+		SetConsoleOutputCP(866);
+		 c = getch();
+		 system("cls");
+		record* search_mas = nullptr;
+		switch (c) {
+		case '1':
+			size = 4000;
+			mas = unmas;
+			break;
+		case '2':
+			size = 4000;
+			mas = sortedmas;
+			break;
+		case '3': {
+			
+			SetConsoleOutputCP(1251);
+			cout << "Введите номер отдела: ";
+			SetConsoleOutputCP(866);
+			cin >> input;
+			int i = 0;
+			while (sortedmas[i].department != input)
+				i++;
+			int begin = i;
+			while (sortedmas[i].department == input)
+				i++;
+			size = i - begin;
+			search_mas = new record[size];
+			for (int j = 0; begin < i; begin++, j++)
+				search_mas[j] = sortedmas[begin];
+		
+
+			mas = search_mas;
+		}
+			break;
+		
+		case '4':
+			break;
+		default:
+			c= 0;
+		}
+		if (c!='4' && c!=0)
+		output(mas, size);
+		if (mas = search_mas)
+			delete[]search_mas;
+	} while (c != '4');
+	delete[]unmas;
+	delete[]sortedmas;
+	return 0;
+}
